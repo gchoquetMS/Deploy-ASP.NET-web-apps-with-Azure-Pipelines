@@ -1,24 +1,33 @@
+SQLSVRNAME=mysqlsrvgc0012
+dig $SQLSVRNAME.database.windows.net +short
+
+WEBAPPNAME=mywebappgc0012
+dig $WEBAPPNAME.azurewebsites.net +short
+
+
 # ASP.NET
 # Build and test ASP.NET projects.
 # Add steps that publish symbols, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
+# https://learn.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
+
+variables: 
+- group: AzureResourcesVariableGroup
 
 trigger: none
-
-
-pool:
-  vmImage: 'windows-latest'
-
-variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
-  buildConfiguration: 'Release'
-  group: AzureResourcesVariableGroup
 
 stages:
 - stage: Build
   jobs: 
   - job: Build
+
+    pool:
+      vmImage: 'windows-latest'
+
+    variables:
+      solution: '**/*.sln'
+      buildPlatform: 'Any CPU'
+      buildConfiguration: 'Release'
+
     steps:
     - task: NuGetToolInstaller@1
 
@@ -32,12 +41,12 @@ stages:
         msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
         platform: '$(buildPlatform)'
         configuration: '$(buildConfiguration)'
+
     - task: PublishBuildArtifacts@1
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         ArtifactName: 'drop'
         publishLocation: 'Container'
-
 
 - stage: DeployAzureResources
   jobs: 
@@ -45,6 +54,7 @@ stages:
     pool: 
       vmImage: 'windows-latest'
     steps:
+
     - task: AzureCLI@2
       inputs:
         azureSubscription: 'labAzureSubscription'
@@ -53,12 +63,12 @@ stages:
         inlineScript: |
           # create a resource group
           az group create -l $LOCATION -n $RESOURCEGROUPNAME
+
           # create and configure Azure SQL logical server and Azure SQL database
           az sql server create -l $LOCATION -g $RESOURCEGROUPNAME -n $SQLSRVNAME -u $(USERNAME) -p $(PASSWORD)
           az sql db create -g $RESOURCEGROUPNAME -s $SQLSRVNAME -n $DBNAME --service-objective Basic
           az sql server firewall-rule create -g $RESOURCEGROUPNAME -s $SQLSRVNAME -n allowazure --start-ip-address 0.0.0.0 --end-ip-address 0.0.0.0
-          
+
           # create and configure an Azure App Service plan and an Azure web app
-          az appservice p
-          lan create -g $RESOURCEGROUPNAME -n $SVCPLANNAME --sku FREE
+          az appservice plan create -g $RESOURCEGROUPNAME -n $SVCPLANNAME --sku FREE
           az webapp create -g $RESOURCEGROUPNAME -p $SVCPLANNAME -n $WEBAPPNAME
