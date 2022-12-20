@@ -1,9 +1,3 @@
-SQLSVRNAME=mysqlsrvgc0012
-dig $SQLSVRNAME.database.windows.net +short
-
-WEBAPPNAME=mywebappgc0012
-dig $WEBAPPNAME.azurewebsites.net +short
-
 
 # ASP.NET
 # Build and test ASP.NET projects.
