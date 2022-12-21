@@ -33,14 +33,4 @@ stages:
           # create and configure an Azure App Service plan and an Azure web app
           az appservice plan create -g $RESOURCEGROUPNAME -n $SVCPLANNAME --sku FREE
           az webapp create -g $RESOURCEGROUPNAME -p $SVCPLANNAME -n $WEBAPPNAME
-
-    - task: AzureRmWebAppDeployment@4
-      inputs:
-        ConnectionType: 'AzureRM'
-        azureSubscription: 'labAzureSubscription'
-        appType: 'webApp'
-        WebAppName: 'mywebappgc0012'
-        deployToSlotOrASE: true
-        ResourceGroupName: 'aspdevops-rg'
-        SlotName: 'Green'
-        packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
+          az webapp deployment slot create --name $WEBAPPNAME --resource-group $RESOURCEGROUPNAME --slot green
